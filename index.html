@@ -278,6 +278,8 @@ input,select,textarea{border:1px solid var(--line);background:var(--card);border
   .ctrl{grid-template-columns:1.3fr 1fr}
   .ctrl .btn{grid-column:1/-1}
 }
+
+.x.arm{color:#fff;background:var(--danger);border-radius:8px;padding:2px 8px;font-size:.8rem;width:auto}
 </style>
 </head>
 <body>
@@ -487,6 +489,8 @@ var GOALS=[{name:"Ăn uống",cats:["Ăn uống"],vnd:12000000,note:"6 triệu m
 /* ---------- tiện ích ---------- */
 function esc(s){return String(s==null?"":s).replace(/[&<>"']/g,function(c){return {"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c];});}
 function fmt(n){return Math.round(n).toLocaleString("vi-VN");}
+function fmtC(n){var r=Math.round(n*10)/10;return r.toLocaleString("vi-VN",{maximumFractionDigits:Math.abs(r)<100?1:0});}
+function fmtDur(m){m=Math.round(m);var h=Math.floor(m/60),r=m%60;return h?(h+" giờ"+(r?" "+r+" phút":"")):(r+" phút");}
 function amap(q){return "https://uri.amap.com/search?keyword="+encodeURIComponent(q)+"&view=map&src=trip&callnative=1";}
 function ls(k,v){try{if(v===undefined)return localStorage.getItem(k);localStorage.setItem(k,v);}catch(e){return null;}}
 function nowCN(){var o={};new Intl.DateTimeFormat("en-CA",{timeZone:"Asia/Shanghai",year:"numeric",month:"2-digit",day:"2-digit",hour:"2-digit",minute:"2-digit",hour12:false}).formatToParts(new Date()).forEach(function(x){o[x.type]=x.value;});return {date:o.year+"-"+o.month+"-"+o.day,min:(+o.hour%24)*60+(+o.minute)};}
@@ -494,7 +498,7 @@ function startMin(t){if(/^\d+\/\d+/.test(t))return -1;var m=/(\d{1,2}):(\d{2})/.
 var NOW=nowCN(),TODAY=DAYS.findIndex(function(d){return d.d===NOW.date;});
 var rate=function(){return +state.rate||3904;};
 var cur=ls("tripCur")||"vnd",view=ls("tripView")||"all",donutMode=ls("tripDonut")||"spent";
-function money(v,short){if(cur==="cny")return "¥"+fmt(v/rate());if(short&&Math.abs(v)>=1e6)return (Math.round(v/1e5)/10).toLocaleString("vi-VN")+" tr";return fmt(v)+" đ";}
+function money(v,short){if(cur==="cny")return "¥"+fmtC(v/rate());if(short&&Math.abs(v)>=1e6)return (Math.round(v/1e5)/10).toLocaleString("vi-VN")+" tr";return fmt(v)+" đ";}
 function prepaidIn(cats){return PREPAID.reduce(function(a,p){return cats.indexOf(p.cat)>=0?a+p.vnd:a;},0);}
 var GOAL_CATS=["Ăn uống","Di chuyển"];
 function prepaid(){return PREPAID.reduce(function(a,p){return a+p.vnd;},0);}
@@ -572,11 +576,12 @@ function mapSVG(i){
   var cityQ=P.cfg.h==="hz"?"杭州 西湖":"上海 外滩";
   var offHtml=off.length?'<div class="mapoff">Ngoài bản đồ: '+off.map(function(p){return '<b>'+p.num+'</b> '+esc(p.label);}).join(" · ")+'</div>':'';
   var tot=R.legs.reduce(function(a,l){return a+l.min;},0),dist=R.legs.reduce(function(a,l){return a+l.d;},0);
-  var foot='<div class="mapsum"><span>Di chuyển ≈ <b>'+Math.floor(tot/60)+' h '+(tot%60)+'</b> · '+fmtKm(dist)+' <span class="muted">(theo đường đi)</span></span><a href="'+amap(cityQ)+'" target="_blank" rel="noopener">Mở Amap ↗</a></div>';
+  var foot='<div class="mapsum"><span>Di chuyển ≈ <b>'+fmtDur(tot)+'</b> · '+fmtKm(dist)+' <span class="muted">(theo đường đi)</span></span><a href="'+amap(cityQ)+'" target="_blank" rel="noopener">Mở Amap ↗</a></div>';
   var mk=R.seq.concat([{c:P.hotel,h:true}]).filter(function(p,ix,arr){return arr.findIndex(function(q){return (q.h?'H':q.num)===(p.h?'H':p.num);})===ix;}).map(function(p){return p.c[1]+','+p.c[0]+','+encodeURIComponent(p.h?'Khách sạn':p.num+'');}).join('|');
   var dayLink='https://uri.amap.com/marker?markers='+mk+'&coordinate=wgs84&callnative=1&src=trip';
   foot=foot.replace(amap(cityQ),dayLink).replace('Mở Amap ↗','Xem các điểm trên Amap ↗');
   if(!WEB)return foot;
+  if(WEB&&!window.L)return foot+offHtml;
   if(WEB)return '<div class="map"><div class="lmap" id="lmap'+i+'" data-lmap="'+i+'"></div></div>'+foot+offHtml;
   var all=seq.map(function(p){return p.c;}).concat([P.hotel]);
   var la=all.map(function(c){return c[0];}),lo=all.map(function(c){return c[1];});
@@ -697,7 +702,7 @@ function ptName(i,p){if(p.h)return "Khách sạn";var it=DAYS[i].items[p.j];retu
 function legHTML(i,l){
   var dot=function(p){return '<span class="ldot'+(p.h?' h':'')+'">'+(p.h?'H':p.num)+'</span>';};
   return '<li class="leg"><span></span><div class="legc"><div class="lr">'+dot(l.a)+'<span class="ln">'+esc(ptName(i,l.a))+'</span><span class="arr">→</span>'+dot(l.b)+'<span class="ln">'+esc(ptName(i,l.b))+'</span></div>'+
-   '<div class="lm"><span>'+MODE[l.mode][0]+' '+MODE[l.mode][1].charAt(0).toUpperCase()+MODE[l.mode][1].slice(1)+' <b>'+fmtKm(l.d)+'</b> · ~'+l.min+' phút'+(l.real?'':' (ước tính)')+'</span><a href="'+navUrl(l)+'" target="_blank" rel="noopener">Đường đi Amap ↗</a></div></div></li>';
+   '<div class="lm"><span>'+MODE[l.mode][0]+' '+MODE[l.mode][1].charAt(0).toUpperCase()+MODE[l.mode][1].slice(1)+' <b>'+fmtKm(l.d)+'</b> · ~'+fmtDur(l.min)+''+(l.real?'':' (ước tính)')+'</span><a href="'+navUrl(l)+'" target="_blank" rel="noopener">Đường đi Amap ↗</a></div></div></li>';
 }
 
 /* ---------- Lịch trình ---------- */
@@ -787,7 +792,7 @@ function budgetView(){
   var rows="";
   if(view!=="pre"){var ex=state.expenses.slice().sort(function(a,b){return (b.date||"").localeCompare(a.date||"")||(b.id>a.id?1:-1);}),last="";
     ex.forEach(function(e){if(e.date!==last){last=e.date;rows+='<div class="txg">'+(+e.date.slice(8))+' Th'+(+e.date.slice(5,7))+'</div>';}
-      rows+='<div class="tx"><span class="dot" style="background:'+(COLORS[e.cat]||COLORS["Khác"])+'"></span><div><div>'+esc(e.desc)+'</div><div class="d">'+esc(e.cat)+'</div></div><div class="a">¥'+fmt(e.cny)+'<small>'+fmt(e.cny*rate())+' đ</small></div><button class="x" data-del="'+esc(e.id)+'" aria-label="Xóa '+esc(e.desc)+'">×</button></div>';});
+      rows+='<div class="tx"><span class="dot" style="background:'+(COLORS[e.cat]||COLORS["Khác"])+'"></span><div><div>'+esc(e.desc)+'</div><div class="d">'+esc(e.cat)+'</div></div><div class="a">¥'+fmtC(e.cny)+'<small>'+fmt(e.cny*rate())+' đ</small></div><button class="x" data-del="'+esc(e.id)+'" aria-label="Xóa '+esc(e.desc)+'">×</button></div>';});
     if(!ex.length&&view==='trip')rows+='<div class="empty">Chưa có khoản nào.</div>';}
   if(view!=="trip"){rows+='<div class="txg">Trả trước</div>'+PREPAID.map(function(p){return '<div class="tx"><span class="dot" style="background:'+COLORS[p.cat]+'"></span><div><div>'+esc(p.desc)+'</div><div class="d">'+esc(p.cat)+'</div></div><div class="a">'+money(p.vnd)+'</div><span></span></div>';}).join("");}
   var txCard='<div class="card" style="overflow:hidden"><div class="pad" style="padding-bottom:12px"><h2 class="ctitle" style="margin:0">Các khoản chi</h2></div>'+rows+'</div>';
@@ -911,7 +916,7 @@ document.addEventListener("click",function(e){
   else if(ds.city){city=ds.city;render();}
   else if(ds.done){e.preventDefault();if(state.done[ds.done])delete state.done[ds.done];else state.done[ds.done]=1;render();persist();}
   else if(ds.show){e.preventDefault();showBig(ds.label,ds.show,ds.py||"");}
-  else if(ds.del){state.expenses=state.expenses.filter(function(x){return x.id!==ds.del;});render();persist();}
+  else if(ds.del){if(t.dataset.arm!=="1"){document.querySelectorAll("[data-del][data-arm]").forEach(function(x){x.removeAttribute("data-arm");x.textContent="×";});t.dataset.arm="1";t.textContent="Xoá?";t.classList.add("arm");setTimeout(function(){if(t.isConnected&&t.dataset.arm==="1"){t.removeAttribute("data-arm");t.textContent="×";t.classList.remove("arm");}},4000);return;}state.expenses=state.expenses.filter(function(x){return x.id!==ds.del;});render();persist();}
   else if(ds.ask){ask(ds.ask);}
   else if(ds.close!==undefined){closeOv();}
   else if(ds.log!==undefined){openLog();}
