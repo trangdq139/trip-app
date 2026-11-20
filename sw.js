@@ -1,4 +1,4 @@
-const C='trip-e6208152';
+const C='trip-6c3a7e8c';
 const PRE=['./','./index.html','./manifest.json','./icon-192.png','./icon-512.png','./apple-touch-icon.png',
 'https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.css','https://cdnjs.cloudflare.com/ajax/libs/leaflet/1.9.4/leaflet.min.js'];
 self.addEventListener('install',e=>{e.waitUntil(caches.open(C).then(c=>Promise.all(PRE.map(u=>c.add(new Request(u,{mode:u.startsWith('http')?'no-cors':'same-origin'})).catch(()=>{}))))); self.skipWaiting();});
