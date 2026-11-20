@@ -261,6 +261,23 @@ input,select,textarea{border:1px solid var(--line);background:var(--card);border
 #lb .lbn{right:10px;top:50%;transform:translateY(-50%)}
 #lb .lbc{position:absolute;bottom:14px;left:0;right:0;text-align:center;color:#d6dde0;font-size:.8rem;padding:0 16px}
 #lb .lbc a{color:#fff}
+
+/* phone fit */
+@media (max-width:480px){
+  .tabs{gap:0}
+  .tabs button{flex:1 1 0;padding:12px 4px 10px;font-size:.95rem;text-align:center}
+  .seg{gap:2px;padding:5px}
+  .seg button{flex:1 1 auto;padding:8px 6px;font-size:.88rem}
+  .seg button .n{margin-left:3px}
+}
+@media (max-width:360px){
+  .tabs button{font-size:.88rem}
+  .seg button{padding:8px 5px;font-size:.84rem}
+}
+@media (max-width:480px){
+  .ctrl{grid-template-columns:1.3fr 1fr}
+  .ctrl .btn{grid-column:1/-1}
+}
 </style>
 </head>
 <body>
@@ -872,7 +889,7 @@ function showBig(label,zh,py){
 }
 var LB=null;
 function lbShow(){var g=IMGS[LB.k],it=g[LB.n],el=document.getElementById("lb");if(!el){el=document.createElement("div");el.id="lb";el.setAttribute("role","dialog");el.setAttribute("aria-modal","true");document.body.appendChild(el);}
-  el.innerHTML='<button class="lbx" data-lb="x" aria-label="Đóng">✕</button><div class="lbi"><img src="'+it.s+'" alt=""></div>'+(g.length>1?'<button class="lbp" data-lb="p" aria-label="Ảnh trước">‹</button><button class="lbn" data-lb="n" aria-label="Ảnh sau">›</button>':'')+'<div class="lbc">'+(it.c?esc(it.c)+'<br>':'')+(LB.n+1)+' / '+g.length+' · Ảnh: '+(it.u?'<a href="'+it.u+'" target="_blank" rel="noopener">'+esc(it.a)+'</a> · Wikimedia Commons':esc(it.a))+'</div>';}
+  el.innerHTML='<button class="lbx" data-lb="x" aria-label="Đóng">✕</button><div class="lbi"><img src="'+it.s+'" alt=""></div>'+(g.length>1?'<button class="lbp" data-lb="p" aria-label="Ảnh trước">‹</button><button class="lbn" data-lb="n" aria-label="Ảnh sau">›</button>':'')+'<div class="lbc">'+(it.c?esc(it.c)+'<br>':'')+(LB.n+1)+' / '+g.length+' · Ảnh: '+(it.u?'<a href="'+it.u+'" target="_blank" rel="noopener">'+esc(it.a)+'</a>'+(it.a==='Wikimedia Commons'?'':' · Wikimedia Commons'):esc(it.a))+'</div>';}
 function lbClose(){var el=document.getElementById("lb");if(el)el.remove();LB=null;}
 function lbGo(d){if(!LB)return;var L=IMGS[LB.k].length;LB.n=(LB.n+d+L)%L;lbShow();}
 document.addEventListener("click",function(e){var g=e.target.closest("[data-gal]");if(g){e.preventDefault();e.stopPropagation();LB={k:g.dataset.gal,n:+g.dataset.gn};lbShow();return;}
